@@ -4,7 +4,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <omp.h>
-#include<new>
+#include <algorithm> 
 using namespace std;
 // a class to time things using the high resolution timer class
 // to use,  call start() before the code you want to time.  Call
@@ -40,7 +40,7 @@ public:
         }
         // will return the elapsed time in seconds as a double
         double getTime( ) {
-                std::chrono::duration<double> elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+                std::chrono::duration<double> elapsed = std::chrono::duration_cast<std::chrono::duration<double> > (t2-t1);
                 return elapsed.count();
 	}
 };
@@ -59,52 +59,6 @@ int * randNumArray( const int size, const int seed ) {
 	}
 	return array;
 }
-
-void customMerge(int arr[], int first, int middle, int last) {
-    int* tempArray = new int[last - first + 1];
-    int leftIndex = first;
-    int rightIndex = middle + 1;
-    int mergedIndex = 0;
-
-    while (leftIndex <= middle && rightIndex <= last) {
-        if (arr[leftIndex] < arr[rightIndex]) {
-            tempArray[mergedIndex] = arr[leftIndex];
-            leftIndex++;
-        } else {
-            tempArray[mergedIndex] = arr[rightIndex];
-            rightIndex++;
-        }
-        mergedIndex++;
-    }
-
-    while (leftIndex <= middle) {
-        tempArray[mergedIndex] = arr[leftIndex];
-        leftIndex++;
-        mergedIndex++;
-    }
-    while (rightIndex <= last) {
-        tempArray[mergedIndex] = arr[rightIndex];
-        rightIndex++;
-        mergedIndex++;
-    }
-
-    for (int i = 0; i < mergedIndex; i++) {
-        arr[first + i] = tempArray[i];
-    }
-
-    delete[] tempArray;
-}
-
-
-void sequential_mergesort(int* array, int first, int last) {
-    if (first < last) {
-        int mid = (first + last) / 2;
-        sequential_mergesort(array, first, mid);
-        sequential_mergesort(array, mid + 1, last);
-        customMerge(array, first, mid, last); // Merging the two halves
-    }
-}
-
 
 int main( int argc, char** argv ) {
 
@@ -139,12 +93,12 @@ int main( int argc, char** argv ) {
 	// get the random numbers
 	array = randNumArray( size, seed );
 	// tell omp how many threads to use
-        omp_set_num_threads( numThreads );
+    omp_set_num_threads( numThreads );
 
 	stopwatch S1;
 	S1.start();
 
-	sequential_mergesort( array, 0, size-1);
+	sort(array, array + size);
 
 	S1.stop();
 	// print out the time

@@ -1,16 +1,20 @@
+#include<iostream>
+#include<sstream>
+#include<fstream>
+#include<omp.h>
+#include<chrono>
+#include<time.h>
+#include<cstdlib>
+#include<ctime>
 
-#include <chrono>
-#include <iostream>
-#include <sstream>
-#include <cstdlib>
-#include <omp.h>
-#include<new>
 using namespace std;
+
 // a class to time things using the high resolution timer class
 // to use,  call start() before the code you want to time.  Call
 // stop() after the code you want to time.  call getTime() to return
 // the elapsed time in seconds.
-// to reuse the instance,  call reset(),  then time something else
+// to reuse the instance,  call reset(), then time something else
+
 class stopwatch{
 private:
         std::chrono::high_resolution_clock::time_point t1;
@@ -45,8 +49,6 @@ public:
 	}
 };
 
-
-
 // create an array of length size of random numbers
 // returns a pointer to the array
 // seed: seeds the random number generator
@@ -61,47 +63,93 @@ int * randNumArray( const int size, const int seed ) {
 }
 
 void customMerge(int arr[], int first, int middle, int last) {
-    int* tempArray = new int[last - first + 1];
-    int leftIndex = first;
-    int rightIndex = middle + 1;
-    int mergedIndex = 0;
+    int leftSize = middle - first + 1;
+    int rightSize = last - middle;
 
-    while (leftIndex <= middle && rightIndex <= last) {
-        if (arr[leftIndex] < arr[rightIndex]) {
-            tempArray[mergedIndex] = arr[leftIndex];
+    int* leftArray = new int[leftSize];
+    int* rightArray = new int[rightSize];
+
+    // Copying data to temporary arrays leftArray[] and rightArray[]
+    for (int i = 0; i < leftSize; i++) {
+        leftArray[i] = arr[first + i];
+    }
+    for (int i = 0; i < rightSize; i++) {
+        rightArray[i] = arr[middle + 1 + i];
+    }
+
+    int leftIndex = 0;
+    int rightIndex = 0;
+    int mergedIndex = first;
+
+    // Merging the two subarrays back into the original array
+    while (leftIndex < leftSize && rightIndex < rightSize) {
+        if (leftArray[leftIndex] <= rightArray[rightIndex]) {
+            arr[mergedIndex] = leftArray[leftIndex];
             leftIndex++;
         } else {
-            tempArray[mergedIndex] = arr[rightIndex];
+            arr[mergedIndex] = rightArray[rightIndex];
             rightIndex++;
         }
         mergedIndex++;
     }
 
-    while (leftIndex <= middle) {
-        tempArray[mergedIndex] = arr[leftIndex];
+    // Copying the remaining elements of leftArray[], if any
+    while (leftIndex < leftSize) {
+        arr[mergedIndex] = leftArray[leftIndex];
         leftIndex++;
         mergedIndex++;
     }
-    while (rightIndex <= last) {
-        tempArray[mergedIndex] = arr[rightIndex];
+
+    // Copyingthe remaining elements of rightArray[], if any
+    while (rightIndex < rightSize) {
+        arr[mergedIndex] = rightArray[rightIndex];
         rightIndex++;
         mergedIndex++;
     }
 
-    for (int i = 0; i < mergedIndex; i++) {
-        arr[first + i] = tempArray[i];
-    }
-
-    delete[] tempArray;
+    // Cleaning up temporary arrays
+    delete[] leftArray;
+    delete[] rightArray;
 }
 
 
-void sequential_mergesort(int* array, int first, int last) {
+void MergeSort(int arr[], int first, int last) {
+    int middle;
     if (first < last) {
-        int mid = (first + last) / 2;
-        sequential_mergesort(array, first, mid);
-        sequential_mergesort(array, mid + 1, last);
-        customMerge(array, first, mid, last); // Merging the two halves
+        middle = (first + last) / 2;
+        if ((last - first) <= 2) {
+            MergeSort(arr, first, middle);
+            MergeSort(arr, middle + 1, last);
+        } else {
+            MergeSort(arr, first, middle);
+            MergeSort(arr, middle + 1, last);
+        }
+          customMerge(arr, first, middle, last);
+     }
+}
+
+void parallelMergeSort(int arr[], int first, int last) {
+    int middle;
+    if (first < last) {
+        middle = (first + last) / 2;
+        if ((last - first) <= 2) {
+            // Base case: if the array size is small enough, sort sequentially
+            MergeSort(arr, first, middle);
+            MergeSort(arr, middle + 1, last);
+        } else {
+           
+            #pragma omp parallel sections
+            {
+                #pragma omp section
+                MergeSort(arr, first, middle);
+
+                #pragma omp section
+                MergeSort(arr, middle + 1, last);
+            }
+            #pragma omp barrier // Adding barrier synchronization 
+        }
+        // Merging the two sorted halves
+        customMerge(arr, first, middle, last);
     }
 }
 
@@ -139,12 +187,12 @@ int main( int argc, char** argv ) {
 	// get the random numbers
 	array = randNumArray( size, seed );
 	// tell omp how many threads to use
-        omp_set_num_threads( numThreads );
+    omp_set_num_threads( numThreads );
 
 	stopwatch S1;
 	S1.start();
 
-	sequential_mergesort( array, 0, size-1);
+	parallelMergeSort( array, 0, size-1);
 
 	S1.stop();
 	// print out the time
@@ -154,3 +202,4 @@ int main( int argc, char** argv ) {
 	delete [] array;
 
 }
+

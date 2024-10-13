@@ -57,7 +57,7 @@ int * randNumArray( const int size, const int seed ) {
 	return array;
 }
 
-void quickSort(int arr[], int left, int right) {
+void quickSortParallel(int arr[], int left, int right) {
     int i = left, j = right;
     int pivot = arr[(left + right) / 2];
 
@@ -75,11 +75,16 @@ void quickSort(int arr[], int left, int right) {
         }
     }
 
-    if (left < j) {
-        quickSort(arr, left, j);
-    }
-    if (i < right) {
-        quickSort(arr, i, right);
+#pragma omp parallel sections
+    {
+#pragma omp section
+        if (left < j) {
+            quickSortParallel(arr, left, j);
+        }
+#pragma omp section
+        if (i < right) {
+            quickSortParallel(arr, i, right);
+        }
     }
 }
 
@@ -116,12 +121,12 @@ int main( int argc, char** argv ) {
 	// get the random numbers
 	array = randNumArray( size, seed );
 	// tell omp how many threads to use
-   omp_set_num_threads( numThreads );
+    omp_set_num_threads( numThreads );
 
 	stopwatch S1;
 	S1.start();
 
-	quickSort(array, 0, size - 1);
+    quickSortParallel(array, 0, size - 1);
 
 	S1.stop();
 	// print out the time

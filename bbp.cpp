@@ -39,35 +39,12 @@ public:
         }
         // will return the elapsed time in seconds as a double
         double getTime( ) {
-                std::chrono::duration<double> elapsed = std::chrono::duration_cast<std::chrono::duration<double> > (t2-t1);
+                std::chrono::duration<double> elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
                 return elapsed.count();
 	}
 };
 
-void bubbleSort (int arr[], int N)
-{
-	bool swapped = true;
-	for (int pass = 1; pass < N && swapped == true; pass++)
-	{
-		swapped = false;
-		for (int k = 0; k < N - pass; k++)
-		{
-			if ( arr[k+1] < arr[k])
-			{
-				int temp = arr[k];
-				arr[k] = arr[k+1];
-				arr[k+1] = temp;
-				swapped = true;
-			}
-		}
-		
-	}
-	// for (int i = 0; i < N; i++)
-	// {
-	// 	cout << arr[i] << endl;
-	// }
-	
-}
+
 
 // create an array of length size of random numbers
 // returns a pointer to the array
@@ -81,6 +58,31 @@ int * randNumArray( const int size, const int seed ) {
 	}
 	return array;
 }
+
+void parallelBubbleSort(int arr[], int N, int numThreads) {
+    bool swapped = true;
+
+    while (swapped) {
+        swapped = false;
+
+        #pragma omp parallel for num_threads(numThreads)
+        for (int k = 0; k < N - 1; k++) 
+		{
+            if (arr[k] > arr[k + 1]) 
+			{
+                int temp = arr[k];
+                arr[k] = arr[k + 1];
+                arr[k + 1] = temp;
+                swapped = true;
+            }
+        }
+    }
+	// for (int i = 0; i < N; i++) 
+	// {
+    //     cout << arr[i] << std::endl;
+    // }
+}
+
 
 int main( int argc, char** argv ) {
 
@@ -115,12 +117,12 @@ int main( int argc, char** argv ) {
 	// get the random numbers
 	array = randNumArray( size, seed );
 	// tell omp how many threads to use
-    omp_set_num_threads( numThreads );
+        omp_set_num_threads( numThreads );
 
 	stopwatch S1;
 	S1.start();
 
-	bubbleSort(array, size);
+	parallelBubbleSort(array, size, numThreads);
 
 	S1.stop();
 	// print out the time

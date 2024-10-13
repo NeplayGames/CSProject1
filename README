@@ -14,8 +14,10 @@ As Required we have created the following files to be exected on the Jalapeno se
 -reference.cpp
 
 To execute first run make and once completed you can run the code via following code template :
-
+For the parallel programs:
 [executable name] [amount of random nums to generate] [number of threads to use] [seed value for rand]
+For the serial programs:
+[executable name] [amount of random nums to generate][seed value for rand]
 
 for example: bbs 100000 8 10
 

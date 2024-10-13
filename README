@@ -1,0 +1,21 @@
+Group Information
+Number: 800787174 Name/email: Shreejan Pandey / shrepan@siue.edu
+Number:800802210 Name/email: Oishi Banerjee/ obanerj@siue.edu
+
+
+As Required we have created the following files to be exected on the Jalapeno server that consist of 16 cores 
+
+-bbs.cpp
+-bbp.cpp
+-qss.cpp
+-qsp.cpp
+-mss.cpp
+-msp.cpp
+-reference.cpp
+
+To execute first run make and once completed you can run the code via following code template :
+
+[executable name] [amount of random nums to generate] [number of threads to use] [seed value for rand]
+
+for example: bbs 100000 8 10
+
